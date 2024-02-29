@@ -1,4 +1,4 @@
-#title: "Chpater 3 - AChE/GABA bioindicators"
+#title: "Chapter 3 - AChE/GABA bioindicators"
 #author: "Imogen Poyntz-Wright"
 #date: "2024-02-29"
 
