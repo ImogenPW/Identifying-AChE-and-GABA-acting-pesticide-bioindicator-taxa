@@ -1,0 +1,557 @@
+---
+title: "Chapter 3"
+author: "Imogen Poyntz-Wright"
+date: "2024-01-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Libaries
+```{r}
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(openxlsx)
+library(scales)
+```
+
+
+##Datasets
+
+```{r}
+#SECTION 1 and 2:
+terrestrial_inverts_tox <-read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Toxicty data terrestrial/Terrestrial species LC50 LD50 mortalities.csv")
+
+#Section 3:
+ACHE_acute_mortality <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Toxicity data aquatic/Datasets/ACHE aquatic toxicity dataset_acute_mortality.csv")
+GABA_acute_mortality <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Toxicity data aquatic/Datasets/GABA aquatic toxicity dataset_acute_mortality.csv")
+
+#Section 4:
+ACHE_acute_mortality_ea <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Toxicity data aquatic/Datasets/ACHE aquatic toxicity dataset_acute_mortality_EA.csv")
+GABA_acute_mortality_ea <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Toxicity data aquatic/Datasets/GABA aquatic toxicity dataset_acute_mortality_EA.csv")
+
+#SECTION 5:
+GABA_chronic_mortality_ea <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Chronic aquatic tox/GABA chronic data EA.csv")
+ACHE_chronic_mortality_ea <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Chronic aquatic tox/AChE chronic data EA.csv")
+
+#SECTION 9:
+all_tox_time_ea <- read.csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/Chronic aquatic tox/all toxcity for time graph.csv")
+
+#SECTION 10:
+biota_ang <- read_csv("C:/Users/imoge/OneDrive/phd/Research/Objective 6/EA anglia dataset/Anglian_MInvAbundance.csv")
+```
+
+
+#SECTION 1: Supplementary figures terrestrial invertebrate sensitivity to GABA and AChE acting pesticides
+```{r}
+#Subset data based on MOA
+terrestrial_inverts_tox_ACHE <- terrestrial_inverts_tox[terrestrial_inverts_tox$MOA %in% c('ACHE'),] #SELECT SITE ALL PESTCIDE
+terrestrial_inverts_tox_GABA <- terrestrial_inverts_tox[terrestrial_inverts_tox$MOA %in% c('GABA'),] #SELECT SITE ALL PESTCIDE
+
+# Average conc per species per chemical
+avg_ACHE_spp_endpoint <- terrestrial_inverts_tox_ACHE %>% group_by(Endpoint, Corrected_units, Species, acute_chronic) %>% summarise(mean = mean(Corrected_conc, na.rm=TRUE), sd=sd(Corrected_conc))
+avg_GABA_spp_endpoint <- terrestrial_inverts_tox_GABA %>% group_by(Endpoint, Corrected_units, Species, acute_chronic) %>% summarise(mean = mean(Corrected_conc, na.rm=TRUE), sd=sd(Corrected_conc))
+
+```
+
+#SECTION 2: plot the average sensitivity of species per endpoint and AChE/GABA
+```{r}
+   
+
+##acute plot
+    avg_ACHE_endpoint_acute <- avg_ACHE_spp_endpoint[avg_ACHE_spp_endpoint$acute_chronic %in% c('Acute'),] #SELECT SITE ALL PESTCIDE
+
+    Chemicals_ACHE_Endpoint = unique(avg_ACHE_endpoint_acute$Corrected_units)
+    Chemical_plots_ACHE_Endpoint = list()
+    
+    for(Endpoints_ in Chemicals_ACHE_Endpoint) { 
+      
+      Chemical_plots_ACHE_Endpoint[[Endpoints_]] = ggplot(avg_ACHE_endpoint_acute %>% filter(Corrected_units == Endpoints_), 
+                                                 aes(x=mean, y=reorder(Species, -mean), color = Endpoint)) + geom_point() + 
+                                                 ggtitle(Endpoints_) + ylab("Species") + 
+                                                 xlab("Concentration") + theme(plot.title = element_text(size = 32, 
+                                                 face = "bold", hjust=0.5), axis.title.x = element_text(size = 20, face = "bold"), 
+                                                 axis.title.y = element_text(size = 20, face = "bold")) +scale_x_continuous(trans='log10') + 
+                                                 theme_bw()
+
+                                                 print(Chemical_plots_ACHE_Endpoint[[Endpoints_]])
+    
+          #ggsave(Chemical_plots_ACHE_Endpoint[[Endpoints_]], file=paste0("ACHE acute plot_", Endpoints_,".png"), width = 14, height = 20, units = "cm", dpi=300)
+                                                 }
+    
+    
+##chronic    
+    avg_ACHE_endpoint_acute <- avg_GABA_spp_endpoint[avg_GABA_spp_endpoint$acute_chronic %in% c('Chronic'),] #SELECT SITE ALL PESTCIDE
+
+    Chemicals_ACHE_Endpoint = unique(avg_ACHE_endpoint_acute$Corrected_units)
+    Chemical_plots_ACHE_Endpoint = list()
+    
+    for(Endpoints_ in Chemicals_ACHE_Endpoint) { 
+      
+      Chemical_plots_ACHE_Endpoint[[Endpoints_]] = ggplot(avg_ACHE_endpoint_acute %>% filter(Corrected_units == Endpoints_), 
+                                                 aes(x=mean, y=reorder(Species, -mean), color = Endpoint)) + geom_point() + 
+                                                 ggtitle(Endpoints_) + ylab("Species") + 
+                                                 xlab("Concentration") + theme(plot.title = element_text(size = 32, 
+                                                 face = "bold", hjust=0.5), axis.title.x = element_text(size = 20, face = "bold"), 
+                                                 axis.title.y = element_text(size = 20, face = "bold")) +scale_x_continuous(trans='log10') + 
+                                                 theme_bw()
+
+                                                 print(Chemical_plots_ACHE_Endpoint[[Endpoints_]])
+    
+          ggsave(Chemical_plots_ACHE_Endpoint[[Endpoints_]], file=paste0("GABA chronic plot_", Endpoints_,".png"), width = 14, height = 20, units = "cm", dpi=300)}
+
+```
+
+
+#SECTION 3: Acute toxciticy of all genera to AChE and GABA pesticides
+```{r}
+#Plots: sensitivity per chemical per genus (ACHE)
+    #Find mean for chemical/genus/endpoint
+    ACHE_acute_mortality_corrected_PER_CHEM <- ACHE_acute_mortality %>%
+      group_by(Chemical, Genus, Endpoint) %>%
+      summarise(Mean_corrected = mean(Mean, na.rm=TRUE))
+    
+    #By Chemical
+    Chemicals = unique(ACHE_acute_mortality_corrected_PER_CHEM$Chemical)
+    Chemical_ACHE_acute_mort_plots = list()
+    
+    for(Chemicals_ in Chemicals) {
+      
+      Chemical_ACHE_acute_mort_plots[[Chemicals_]] = ggplot(ACHE_acute_mortality_corrected_PER_CHEM %>% filter(Chemical == Chemicals_), aes(x=reorder(Genus, -Mean_corrected), y=Mean_corrected, color = Endpoint)) + geom_point() + theme(axis.text.x = element_text(angle = 90)) + ggtitle(Chemicals_) + ylab("Concentration (mg/l)") + xlab("Genus") + theme(plot.title = element_text(size = 32, face = "bold", hjust=0.5), axis.title.x = element_text(size = 18, face = "bold"), axis.title.y = element_text(size = 18, face = "bold")) + scale_y_continuous(trans='log10') +facet_wrap(~Endpoint) 
+      
+      print(Chemical_ACHE_acute_mort_plots[[Chemicals_]])
+      #ggsave(Chemical_ACHE_acute_mort_plots[[Chemicals_]], file=paste0("plot_", Chemicals_," acute ACHE mortality.png"), dpi=300)
+    }
+
+#Plots: sensitivity  per genus (ACHE)
+    
+    #Find mean for chemical/genus/endpoint
+    ACHE_acute_mortality_corrected <- ACHE_acute_mortality %>%
+      group_by(Genus, Endpoint) %>%
+      summarise(Mean_corrected = mean(Mean, na.rm=TRUE))
+    #PLOTS_AVERAGE_MORTALITY_ACHE_ACUTE <- ggplot(ACHE_acute_mortality_corrected, aes(x=reorder(Genus, -Mean_corrected), y=Mean_corrected, color = Endpoint)) + geom_point() + theme(axis.text.x = element_text(angle = 90)) + ggtitle(Chemicals_) + ylab("Concentration (µg/l)") + xlab("Genus") + theme(plot.title = element_text(size = 32, face = "bold", hjust=0.5), axis.title.x = element_text(size = 18, face = "bold"), axis.title.y = element_text(size = 18, face = "bold")) + scale_y_continuous(trans='log10') +facet_wrap(~Endpoint) 
+    print(ACHE_acute_mortality_corrected)
+    #By Endpoint
+    Endpoints = unique(ACHE_acute_mortality_corrected$Endpoint)
+    Endpoint_ACHE_acute_mort_plots = list()
+    
+    for(Endpoints_ in Endpoints) {
+      
+      Endpoint_ACHE_acute_mort_plots[[Endpoints_]] = ggplot(ACHE_acute_mortality_corrected %>% filter(Endpoint == Endpoints_), aes(x=Mean_corrected, y=reorder(Genus, -Mean_corrected))) + geom_point(size = 2.5, color = "red") + theme(axis.text.x = element_text(angle = 90)) + ggtitle(Chemicals_) + ylab("Genus") + xlab("Concentration (mg/l)") + theme( axis.title.x = element_text(size = 20, face = "bold"), axis.title.y = element_text(size = 20, face = "bold"), text=element_text(size=15)) + scale_x_continuous(trans='log10') + theme_bw()
+      
+      print(Endpoint_ACHE_acute_mort_plots[[Endpoints_]])
+      #ggsave(Endpoint_ACHE_acute_mort_plots[[Endpoints_]], file=paste0("plot_", Endpoints_," acute ACHE mortality.png"), height = 12, width = 8, dpi=300)
+    }
+
+```
+
+#Section 4: acute sensitivity of genera (monitored by EA) of AChE and GABA pesticides - Figures in MS
+```{r}
+
+#ACHE PLOT
+    
+    #Select only LC50 endpoints    
+    ACHE_acute_mortality_eaLC50_EC50 <- ACHE_acute_mortality_ea %>%
+      filter(Endpoint %in% c('LC50')) %>%
+      group_by(Genus) 
+    selected_data_ACHE <- ACHE_acute_mortality_eaLC50_EC50[c("Genus", "Mean")]
+    
+    # Finding means to GABA pesticide per genus
+    means_by_genus_ache <- aggregate(Mean ~ Genus, data = ACHE_acute_mortality_eaLC50_EC50, mean)
+    # Reorder Genus based on mean values
+    ACHE_acute_mortality_eaLC50_EC50$Genus <- factor(
+      ACHE_acute_mortality_eaLC50_EC50$Genus,
+      levels = means_by_genus_ache$Genus[order(means_by_genus_ache$Mean)])
+        
+    #convert 'Mean' mg/l to micrograms per litre
+    ACHE_acute_mortality_eaLC50_EC50$Mean1 <- ACHE_acute_mortality_eaLC50_EC50$Mean * 1000
+    means_by_genus_ache$Mean1 <- means_by_genus_ache$Mean * 1000
+    
+    # Plotting
+    p1 <- ggplot(ACHE_acute_mortality_eaLC50_EC50, aes(y = Genus, x = Mean1)) +
+      geom_point(color = "grey", size = 3) +
+      geom_point(data = means_by_genus_ache, aes(y = reorder(Genus, Mean1), x = Mean1), color = "red", size = 3) +
+     # geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (µg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(p1)
+    
+    
+    
+#GABA PLOT
+    
+    #Select data with LC50 endpoint    
+    GABA_acute_mortality_corrected_ea_LC50_EC50 <- GABA_acute_mortality_ea %>%
+      filter(Endpoint %in% c('LC50', 'EC50')) %>%
+      group_by(Genus) 
+    as.factor(GABA_acute_mortality_corrected_ea_LC50_EC50$Genus)
+    
+
+    # Finding means to GABA pesticide per genus
+    means_by_genus <- aggregate(Mean ~ Genus, data = GABA_acute_mortality_corrected_ea_LC50_EC50, mean)
+    # Reorder Genus based on mean values
+    GABA_acute_mortality_corrected_ea_LC50_EC50$Genus <- factor(
+      GABA_acute_mortality_corrected_ea_LC50_EC50$Genus,
+      levels = means_by_genus$Genus[order(means_by_genus$Mean)])
+    
+    #convert 'Mean' mg/l to micrograms per litre
+    GABA_acute_mortality_corrected_ea_LC50_EC50$Mean1 <- GABA_acute_mortality_corrected_ea_LC50_EC50$Mean * 1000
+    means_by_genus$Mean1 <- means_by_genus$Mean * 1000
+    
+    # Plotting
+    p2 <- ggplot(GABA_acute_mortality_corrected_ea_LC50_EC50, aes(y = reorder(Genus, Mean), x = Mean)) +
+      geom_point(color = "grey", size = 3) +
+      geom_point(data = means_by_genus, aes(y = reorder(Genus, Mean), x = Mean), color = "red", size = 3) +
+      #geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (µg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(p2)
+    #ggsave(p2, file=paste0("plot LC50 acute GABA mortality1.tiff"), dpi=330)
+    
+    
+    
+```
+
+
+#SECTION 5: Chronic sensitivity of genera (EA monitored) to AChE and GABA pesticides (for LC50 across all chemicals and then per chemical)
+```{r}
+
+ #Find mean for chemical/genus/endpoint
+    
+    ACHE_chronic_mortality_ea2 <- subset(ACHE_chronic_mortality_ea, Mean != 18)
+    ACHE_chronic_mortality_corrected_ea <- ACHE_chronic_mortality_ea2  %>%
+      group_by(Genus) %>%
+      summarise(Mean = mean(Mean, na.rm=TRUE))
+    
+    GABA_chronic_mortality_corrected_ea <- GABA_chronic_mortality_ea  %>%
+      group_by(Genus) %>%
+      summarise(Mean_corrected = mean(Mean, na.rm=TRUE))
+    means_by_genus_chronic_ache <- aggregate(Mean ~ Genus, data = ACHE_chronic_mortality_ea, mean)
+    
+    
+    #chronic data    
+    ache_chronic <- ggplot(ACHE_chronic_mortality_ea, aes(y = reorder(Genus, Mean), x = Mean)) +
+      geom_point(color = "grey", size = 3) +
+     geom_point(data = means_by_genus_chronic_ache, aes(y = reorder(Genus, Mean), x = Mean), color = "red", size = 3) +
+    #geom_point(data = means_by_genus_ache, aes(y = (Genus), x = Mean), color = "blue", size = 3) +
+     # geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+    #  geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(ache_chronic)
+    
+   
+# Perchemical plot
+ 
+        ache_chronic <- ggplot(ACHE_chronic_mortality_ea, aes(y = reorder(Genus, Mean), x = Mean)) +
+      geom_point(color = "grey", size = 3) +
+      geom_point(data = means_by_genus_chronic_ache, aes(y = reorder(Genus, Mean), x = Mean), color = "red", size = 3) +
+      #geom_point(data = means_by_genus_ache, aes(y = (Genus), x = Mean), color = "blue", size = 3) +
+      # geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #  geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(ache_chronic)
+    
+    
+```
+
+#SECTION 6: Acute to chronic adjustment
+##FOURTH plot in section used in supplementary
+
+```{r}
+#LC50 - overall
+
+    #datasets processed - means - to be used
+    ACHE_chronic_mortality_ea2 <- subset(ACHE_chronic_mortality_ea, Mean != 18)
+    ACHE_chronic_mortality_corrected_ea <- ACHE_chronic_mortality_ea2  %>%
+    group_by(Genus) %>%
+    summarise(Mean = mean(Mean, na.rm=TRUE))
+    #Select only LC50 endpoints    
+    ACHE_acute_mortality_eaLC50_EC50 <- ACHE_acute_mortality_ea %>%
+      filter(Endpoint %in% c('LC50')) %>%
+      group_by(Genus) 
+    selected_data_ACHE <- ACHE_acute_mortality_eaLC50_EC50[c("Genus", "Mean")]
+    # Finding means to GABA pesticide per genus
+    means_by_genus_ache <- aggregate(Mean ~ Genus, data = ACHE_acute_mortality_eaLC50_EC50, mean)
+    # Reorder Genus based on mean values
+    ACHE_acute_mortality_eaLC50_EC50$Genus <- factor(
+      ACHE_acute_mortality_eaLC50_EC50$Genus,
+      levels = means_by_genus_ache$Genus[order(means_by_genus_ache$Mean)])
+    
+    #chronic mean vs acute
+    ache_chronic <- ggplot(ACHE_chronic_mortality_corrected_ea, aes(y = reorder(Genus, Mean), x = Mean)) +
+      geom_point(color = "red", size = 5) +
+      geom_point(data = means_by_genus_ache, aes(y = (Genus), x = Mean), color = "blue", size = 3) +
+      #geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(ache_chronic)
+    
+    
+#Per chemical 
+    
+     ACHE_chronic_mortality_corrected_ea_per_chem <- ACHE_chronic_mortality_ea  %>%
+      group_by(Genus,Chemical.Name) %>%
+      summarise(Mean = mean(Mean, na.rm=TRUE))
+    
+     #plot range of data -CHRONIC ACHE
+    x <- ggplot(ACHE_chronic_mortality_ea, aes(y = reorder(Genus, Mean), x = Mean)) +
+      geom_point(color="black",pch=21, size=3) + facet_wrap(~Chemical.Name) +
+      #geom_point(data = ACHE_chronic_mortality_corrected_ea_per_chem, aes(y = reorder(Genus, Mean), x = Mean), color = "red", size = 3) +
+      #geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme_bw() +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1), axis.text.x = element_text(angle = 45, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    # Print the plot
+    print(x)
+   # ggsave(x, file=paste0("ACHE chronic data range.tiff"), dpi=330)
+    
+    #plot range of data -CHRONIC GABA
+    x <- ggplot(GABA_chronic_mortality_ea, aes(y = reorder(Genus, Mean), x = Mean)) +
+      geom_point(color="black",pch=21, size=3) +
+     # geom_point(data = GABA_chronic_mortality_corrected_ea_per_chem, aes(y = reorder(Genus, Mean), x = Mean), color = "red", size = 3) +
+      #geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(x)
+   # ggsave(x, file=paste0("GABA chronic data range.tiff"), dpi=330)
+    
+    #process data for comaprison
+    ACHE_acute_mortality_eaLC50 <- ACHE_acute_mortality_ea[ACHE_acute_mortality_ea$Endpoint %in% c('LC50'),] #SELECT SITE ALL PESTCIDE
+    ACHE_acute_mortality_eaLC50_per_chem <- ACHE_acute_mortality_eaLC50  %>%
+      group_by(Genus,Chemical.Name) %>%
+      summarise(Mean = mean(Mean, na.rm=TRUE))
+    ACHE_acute_mortality_eaLC50_per_chem2 <- ACHE_acute_mortality_eaLC50_per_chem[ACHE_acute_mortality_eaLC50_per_chem$Chemical.Name %in% c('Azinphos-methyl', 'parathion-ethyl', 'chlorpyrifos-ethyl', 'diazinon', 'dimethoate', 'fenitrothion', 'parathion-ethyl'),] #SELECT PESTCIDE
+    ACHE_acute_mortality_eaLC50_per_chem3 <- ACHE_acute_mortality_eaLC50_per_chem2[ACHE_acute_mortality_eaLC50_per_chem2$Genus %in% c('Cloeon', 'Daphnia'),] #Select taxa
+    compare_acute_chronic_ache <- merge(ACHE_acute_mortality_eaLC50_per_chem3,ACHE_chronic_mortality_corrected_ea_per_chem, by = c("Genus", "Chemical.Name")) #merge
+    
+    
+#plot - ACUTE VS CHRONIC -ACHE
+    ache_chronic_acute <- ggplot(compare_acute_chronic_ache, aes(y = reorder(Genus, Mean.x), x = Mean.x)) +
+      geom_point(color = "red", size = 3) + facet_wrap(~Chemical.Name ) +
+      geom_point(data = compare_acute_chronic_ache, aes(y = (Genus), x = Mean.y), color = "blue", size = 3) +
+      #geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(ache_chronic_acute)
+    #ggsave(ache_chronic_acute, file=paste0("ACHE Mean sensitivity acute vs chronic.tiff"), dpi=330)
+    
+    
+    #Processed GABA data
+      GABA_chronic_mortality_corrected_ea_per_chem <- GABA_chronic_mortality_ea  %>%
+      group_by(Genus,Chemical.Name) %>%
+      summarise(Mean = mean(Mean, na.rm=TRUE))
+     GABA_acute_mortality_eaLC50 <- GABA_acute_mortality_ea[ACHE_acute_mortality_ea$Endpoint %in% c('LC50', 'EC50'),] #SELECT SITE ALL PESTCIDE
+    GABA_acute_mortality_eaLC50_per_chem <- GABA_acute_mortality_eaLC50  %>%
+      group_by(Genus,Chemical.Name) %>%
+      summarise(Mean = mean(Mean, na.rm=TRUE))
+    GABA_acute_mortality_eaLC50_per_chem2 <- GABA_acute_mortality_eaLC50_per_chem[GABA_acute_mortality_eaLC50_per_chem$Chemical.Name %in% c('lindane '),] #SELECT PESTCIDE
+    GABA_acute_mortality_eaLC50_per_chem3 <- GABA_acute_mortality_eaLC50_per_chem2[GABA_acute_mortality_eaLC50_per_chem2$Genus %in% c('Lymnaea'),] #Select taxa
+    compare_acute_chronic_gaba <- merge(GABA_acute_mortality_eaLC50_per_chem3,GABA_chronic_mortality_corrected_ea_per_chem, by = c("Genus", "Chemical.Name")) #merge
+    
+    
+#plot - ACUTE VS CHRONIC -GABA
+    gaba_chronic_acute <- ggplot(compare_acute_chronic_gaba, aes(y = reorder(Genus, Mean.x), x = Mean.x)) +
+      geom_point(color = "red", size = 3) + 
+      geom_point(data = compare_acute_chronic_gaba, aes(y = (Genus), x = Mean.y), color = "blue", size = 3) +
+      #geom_vline(xintercept = 1, linetype = "dashed", color = "grey", size = 1) +
+      #geom_vline(xintercept = 0.1, linetype = "dashed", color = "grey", size = 1) +
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      ylab("Genus") +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(gaba_chronic_acute)
+    #ggsave(gaba_chronic_acute, file=paste0("GABA Mean sensitivity acute vs chronic.tiff"), dpi=330)
+    
+    
+
+```
+
+#SECTION 7: CALCULATE CHRONIC - ACUTE RATIO AND CHRONIC ADJUSTEMENT Factor
+```{r}
+
+#ACHE
+#calcuate ratio (acute/chronic)
+    compare_acute_chronic_ache$ratio <- compare_acute_chronic_ache$Mean.x/compare_acute_chronic_ache$Mean.y
+    
+#plot ration (acute/chronic) -ACHE
+    ache_chronic_acute_ratio <- ggplot(compare_acute_chronic_ache, aes(y = Genus, x = ratio)) +
+      geom_point(size = 3) +
+      geom_vline(xintercept = mean(compare_acute_chronic_ache$ratio), color = "grey", linetype = "dashed", size = 1) +  # Add mean line
+      geom_vline(xintercept = median(compare_acute_chronic_ache$ratio), color = "light blue", linetype = "dashed", size = 1) +  # Add median line
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Ratio (acute/chronic) Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+     # Print the plot
+    print(ache_chronic_acute_ratio)
+    #ggsave(ache_chronic_acute_ratio, file=paste0("SCATTERPLOT ACHE ratio acute divided by chronic to find chronic factor.tiff"), dpi=330)
+    summary(compare_acute_chronic_ache)
+    
+    
+#GABA
+    #calcuate ratio (acute/chronic)
+    compare_acute_chronic_gaba$ratio <- compare_acute_chronic_gaba$Mean.x/compare_acute_chronic_gaba$Mean.y
+#plot ration (acute/chronic) 
+    gaba_chronic_acute_ratio <- ggplot(compare_acute_chronic_gaba, aes(y = Genus, x = ratio)) +
+      geom_point(size = 3) +
+      geom_vline(xintercept = mean(compare_acute_chronic_gaba$ratio), color = "grey", linetype = "dashed", size = 1) +  # Add mean line
+      geom_vline(xintercept = median(compare_acute_chronic_gaba$ratio), color = "light blue", linetype = "dashed", size = 1) +  # Add median line
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Ratio (acute/chronic) Concentration (mg/l)") +
+      scale_x_continuous(trans = 'log10') +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    # Print the plot
+    print(gaba_chronic_acute_ratio)
+    #ggsave(gaba_chronic_acute_ratio, file=paste0("SCATTERPLOT GABA ratio acute divided by chronic to find chronic factor.tiff"), dpi=330)
+    summary(compare_acute_chronic_gaba)
+    
+    
+
+```
+
+#SECTION 8: CONVERT ACUTE ACHE VALUES TO CHRONIC USING CHRONIC ADJUSTMENT FACTOR
+```{r}
+ #Correct acute values by chronic factor
+    
+    #ACHE
+    ACHE_acute_mortality_eaLC50_per_genus <- ACHE_acute_mortality_eaLC50  %>%
+      group_by(Genus) %>%
+      summarise(Mean = mean(Mean, na.rm=TRUE))
+    
+    ACHE_acute_mortality_eaLC50_per_genus$mean_chronic_fact <- ACHE_acute_mortality_eaLC50_per_genus$Mean/1000 #15.508  #1183.269 #dont divide by 1000 just change units to microgram per litre
+    
+    ACHE_chronic_acute_chronicratio <- ggplot(ACHE_acute_mortality_eaLC50_per_genus, aes(y = reorder(Genus, - Mean ), x = Mean )) +
+      geom_point(size = 3) +
+      geom_vline(xintercept = 0.72, color = "grey", linetype = "dashed", size = 1) +  # Add mean line
+      theme(axis.text.y = element_text(angle = 0, hjust = 1)) +
+      xlab("Corrected concentration (µg/l)") +
+      ylab("Genus") +
+      scale_x_continuous(trans = 'log10') +
+      theme_bw() +
+      theme(axis.title.x = element_text(size = 20), axis.title.y = element_text(size = 20), text = element_text(size = 15))
+    
+    # Print the plot
+    print(ACHE_chronic_acute_chronicratio)
+    ggsave(ACHE_chronic_acute_chronicratio, file=paste0("ACHE acute means corrected by chronic factor range1.tiff"), dpi=330)
+    
+```
+
+#SECTION 9: DAY VS CONCENTRATION PLOTS. Create plots per chemical showing the change in sensitivity with exposure duration - FIGURE IN SUPPLEMENTARY
+```{r}
+#Make time - concentration plots
+    all_tox_time_ea <- all_tox_time_ea[order(all_tox_time_ea$Days), ]
+    conc_time <- ggplot(all_tox_time_ea, aes(x= Days, y =Mean)) + geom_point() +facet_wrap(~ Chemical + Genus, scales = "free") +  
+      scale_y_continuous(
+        trans = log_trans(base = 100)) + theme_bw()
+    #ggsave(conc_time, file=paste0("ACHE concentration over time.tiff"), dpi=330)
+    
+    all_tox_time_ea <- all_tox_time_ea[order(all_tox_time_ea$Days), ]
+    
+    # Get unique combinations of Chemical and Genus
+    unique_combinations <- unique(all_tox_time_ea[, c("Chemical", "Genus")])
+    
+    # Create and save separate plots for each combination
+    for (i in seq_len(nrow(unique_combinations))) {
+      chemical <- unique_combinations$Chemical[i]
+      genus <- unique_combinations$Genus[i]
+      subset_data <- subset(all_tox_time_ea, Chemical == chemical & Genus == genus)
+      plot <- ggplot(subset_data, aes(x = Days, y = Mean)) +
+        geom_point() +
+        scale_y_continuous(trans = log_trans(base = 100)) +
+        labs(y = paste("Mean"),  title = paste("Plot for", chemical, "-", genus)) +theme_bw()
+      print(plot)
+     # ggsave(paste("plot_", chemical, "_", genus, ".png", sep = ""), plot)
+    }
+    
+
+```
+
+#SECTION 10: PLOTS OF THE NUMBER OF SAMPLES MONITORED OVER THE MONTHS. FIGURE IN SUPPLEMENTARY INFORMATION.
+```{r}
+ #COUNTING THE NUMBER OF SITES SAMPLED PER MONTH
+    
+    # Count the number of sites per month
+    site_counts <- biota_ang %>%
+      group_by(Month) %>%
+      summarise(num_sites = n_distinct(SITE_ID))
+    
+    
+   p1 <-   ggplot(site_counts, aes(x = Month, y = num_sites)) +
+      geom_bar(stat = "identity", fill = "skyblue") +
+      geom_hline(yintercept = 213, color = "red", linetype = "dashed") +
+      labs( 
+           x = "Month",
+           y = "Number of Sites") +
+      theme_minimal()
+   p1 + scale_x_date(labels = scales::date_format("%b"))
+   
+   ggsave(p1, file=paste0("Number of sites monitored per month.tiff"), dpi=330)
+
+```
+
+
+
+
+
